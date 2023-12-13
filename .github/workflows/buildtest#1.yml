@@ -67,8 +67,6 @@ jobs:
       - name: Install dependencies at project root
         run: |
           pnpm install
-          pnpm update
-          pnpm install
             
         shell: pwsh
         
@@ -87,8 +85,7 @@ jobs:
 
       - name: Build Web App and Tauri App
         run: |
-          cd apps/unsaged
-          pnpm run build
+          cd apps/desktop
           pnpm tauri build
         shell: pwsh
 
