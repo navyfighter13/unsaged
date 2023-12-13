@@ -1,12 +1,6 @@
 name: Build exe
 
 on:
-  push:
-    branches:
-      - desktop-app  # Replace 'desktop-app' with your default branch if different.
-  pull_request:
-    branches:
-      - desktop-app  # Replace 'desktop-app' with your default branch if different.
   workflow_dispatch:
 
 
