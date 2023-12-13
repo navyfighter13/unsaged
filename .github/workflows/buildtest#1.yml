@@ -1,0 +1,124 @@
+name: Build exe
+
+on:
+  push:
+    branches:
+      - desktop-app  # Replace 'desktop-app' with your default branch if different.
+  pull_request:
+    branches:
+      - desktop-app  # Replace 'desktop-app' with your default branch if different.
+  workflow_dispatch:
+      branches:
+      - desktop-app  # Replace 'desktop-app' with your default branch if different.
+
+jobs:
+  build:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+      actions: read  # Necessary for actions/create-release
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Enable Long Paths Support
+        run: git config --global core.longpaths true
+        shell: pwsh
+
+      - name: Clean out directory
+        run: |
+          $outPath = "./out"
+          if (Test-Path $outPath) {
+            Remove-Item -Path $outPath -Force -Recurse -ErrorAction SilentlyContinue
+          }
+          if (-not (Test-Path $outPath)) {
+            New-Item -Path $outPath -ItemType Directory
+          }
+        shell: pwsh
+
+      - name: List available Visual Studio versions
+        run: C:\ProgramData\Chocolatey\bin\vswhere.exe -products * -format json
+        shell: cmd
+      
+      - name: Add MSBuild to PATH
+        uses: microsoft/setup-msbuild@v1.1
+        with:
+          vs-prerelease: true
+          msbuild-architecture: x64  # Change to x64 or remove this line
+
+      - name: Install WebView2 runtime
+        run: |
+          iwr https://go.microsoft.com/fwlink/p/?LinkId=2124703 -OutFile MicrosoftEdgeWebview2Setup.exe
+          Start-Process .\MicrosoftEdgeWebview2Setup.exe -ArgumentList "/silent /install" -Wait
+        shell: pwsh
+
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+
+      - name: Install Node.js dependencies
+        run: |
+          npm install -g @tauri-apps/cli
+          npm install -g pnpm
+        shell: pwsh
+
+      - name: Install dependencies at project root
+        run: |
+          pnpm install
+          pnpm update
+          pnpm install
+            
+        shell: pwsh
+        
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - uses: actions/cache@v3
+        with:
+          path: | 
+            apps/unsaged/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/apps/unsaged/package-lock.json') }}
+
+      - name: Build Web App and Tauri App
+        run: |
+          cd apps/unsaged
+          pnpm run build
+          pnpm tauri build
+        shell: pwsh
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name }}-${{ github.run_id }}-${{ github.run_number }}
+          release_name: Release ${{ github.ref_name }} @ ${{ github.run_id }}
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Asset (MSI)
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./apps/unsaged/src-tauri/target/release/bundle/msi/unsaged_0.1.0_x64_en-US.msi
+          asset_name: unsaged_0.1.0_x64_en-US.msi
+          asset_content_type: application/octet-stream
+
+      - name: Upload Release Asset (EXE)
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} 
+          asset_path: ./apps/unsaged/src-tauri/target/release/bundle/nsis/unsaged_0.1.0_x64-setup.exe
+          asset_name: unsaged_0.1.0_x64-setup.exe
+          asset_content_type: application/octet-stream
