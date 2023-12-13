@@ -46,7 +46,8 @@ jobs:
     
       - name: Build the Tauri app
         run: |
-          Start-Process PowerShell -Verb RunAs -ArgumentList "cd apps/desktop; pnpm tauri build"
+          cd apps/desktop
+          pnpm tauri build
         shell: pwsh
 
       - name: Upload archived build artifacts
