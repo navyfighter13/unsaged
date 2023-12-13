@@ -3,7 +3,6 @@ name: Build exe
 on:
   workflow_dispatch:
 
-
 jobs:
   build:
     runs-on: windows-latest
