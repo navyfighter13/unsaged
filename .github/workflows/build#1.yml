@@ -8,8 +8,7 @@ on:
     branches:
       - desktop-app  # Replace 'desktop-app' with your default branch if different.
   workflow_dispatch:
-      branches:
-      - desktop-app  # Replace 'desktop-app' with your default branch if different.
+
 
 jobs:
   build:
