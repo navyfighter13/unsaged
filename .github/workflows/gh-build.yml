@@ -39,11 +39,14 @@ jobs:
 
       - name: Install project dependencies
         run: pnpm install
-
+        
+      - name: Resolve path
+        run: |
+          [System.IO.Path]::GetFullPath(".\apps\desktop\src-tauri\..\out")
+    
       - name: Build the Tauri app
         run: |
-          cd apps/desktop
-          pnpm tauri build --verbose
+          Start-Process PowerShell -Verb RunAs -ArgumentList "cd apps/desktop; pnpm tauri build"
         shell: pwsh
 
       - name: Upload archived build artifacts
