@@ -10,17 +10,6 @@ jobs:
       contents: write
 
     steps:
-      - name: Clean out directory
-        run: |
-          $outPath = "./out"
-          if (Test-Path $outPath) {
-            Remove-Item -Path $outPath -Force -Recurse -ErrorAction SilentlyContinue
-          }
-          if (-not (Test-Path $outPath)) {
-            New-Item -Path $outPath -ItemType Directory
-          }
-        shell: powershell
-
       - name: Check out repository
         uses: actions/checkout@v3
 
