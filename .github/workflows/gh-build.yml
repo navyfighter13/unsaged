@@ -1,4 +1,4 @@
-name: Build#2
+name: Build#3
 
 on:
   workflow_dispatch:
@@ -35,12 +35,12 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
 
-      - name: Set up MSVC v142 - x64/x86 build tools with debug
-        run: |
-          set VSCMD_DEBUG=3
-          "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\Tools\VsDevCmd.bat" > vsdevcmd.trace.txt 2>&1
-        shell: cmd
-
+      - name: Add MSBuild to PATH
+        uses: microsoft/setup-msbuild@v1.1
+        with:
+          vs-prerelease: true
+          msbuild-architecture: x64  # Change to x64 or remove this line
+          
       - name: Cache Rust target directory
         uses: actions/cache@v3
         with:
