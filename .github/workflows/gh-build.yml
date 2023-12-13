@@ -65,7 +65,8 @@ jobs:
       - name: Build the Tauri app
         run: |
           cd apps/desktop
-          pnpm tauri build
+          pnpm tauri build --verbose
+        shell: pwsh
 
       - name: Upload archived build artifacts
         uses: actions/upload-artifact@v3
