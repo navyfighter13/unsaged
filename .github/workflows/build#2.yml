@@ -1,0 +1,84 @@
+name: Build#2
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: self-hosted
+    permissions:
+      contents: write
+      
+    steps:
+      - name: Clean out directory
+        run: |
+          $outPath = "./out"
+          if (Test-Path $outPath) {
+            Remove-Item -Path $outPath -Force -Recurse -ErrorAction SilentlyContinue
+          }
+          if (-not (Test-Path $outPath)) {
+            New-Item -Path $outPath -ItemType Directory
+          }
+        shell: C:\WINDOWS\System32\WindowsPowerShell\v1.0\powershell.EXE {0}
+          
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      # Here we setup caching for Node.js modules
+      - name: Cache Node.js modules
+        uses: actions/cache@v3
+        with:
+          path: |
+            node_modules
+            */*/node_modules
+            ~/.pnpm-store
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json', '**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+      - name: Set up MSVC v142 - x64/x86 build tools with debug
+        run: |
+          set VSCMD_DEBUG=3
+          "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\Tools\VsDevCmd.bat" > vsdevcmd.trace.txt 2>&1
+        shell: cmd
+
+      # Add a caching step for Rust
+      - name: Cache Rust target directory
+        uses: actions/cache@v3
+        with:
+          path: |
+            target
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: ${{ runner.os }}-rust-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-rust-
+      - name: Install WebView2 runtime
+        run: |
+          iwr https://go.microsoft.com/fwlink/p/?LinkId=2124703 -OutFile MicrosoftEdgeWebview2Setup.exe
+          Start-Process .\MicrosoftEdgeWebview2Setup.exe -ArgumentList "/silent /install" -Wait
+      - name: Install Rust with rustup
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          default: true
+          components: rustfmt, clippy
+
+      - name: Install Node.js dependencies
+        run: |
+          npm install -g @tauri-apps/cli
+          npm install -g pnpm          
+      
+      - name: Install project dependencies
+        run: pnpm install
+                
+      - name: Build the Tauri app
+        run: |
+          cd apps/desktop
+          pnpm tauri build
+
+      - name: Upload archived build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: built-app
+          path: D:\actions-runner\_work\unsaged\unsaged\apps\unsaged\src-tauri\target\release\bundle  # Update the build output path as needed
