@@ -13,33 +13,11 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v3
 
-      - name: Cache Node.js modules
-        uses: actions/cache@v3
-        with:
-          path: |
-            node_modules
-            */*/node_modules
-            ~/.pnpm-store
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json', '**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-
       - name: Add MSBuild to PATH
         uses: microsoft/setup-msbuild@v1.1
         with:
           vs-prerelease: true
           msbuild-architecture: x64  # Change to x64 or remove this line
-          
-      - name: Cache Rust target directory
-        uses: actions/cache@v3
-        with:
-          path: |
-            target
-            ~/.cargo/registry
-            ~/.cargo/git
-          key: ${{ runner.os }}-rust-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-rust-
 
       - name: Install WebView2 runtime
         run: |
