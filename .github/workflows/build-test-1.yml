@@ -72,7 +72,7 @@ jobs:
       - uses: actions/cache@v3
         with:
           path: | 
-            apps/unsaged/node_modules
+            apps/desktop/node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('**/apps/unsaged/package-lock.json') }}
 
       - name: Build Web App and Tauri App
@@ -98,7 +98,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./apps/unsaged/src-tauri/target/release/bundle/msi/unsaged_0.1.0_x64_en-US.msi
+          asset_path: ./apps/desktop/src-tauri/target/release/bundle/msi/unsaged_0.1.0_x64_en-US.msi
           asset_name: unsaged_0.1.0_x64_en-US.msi
           asset_content_type: application/octet-stream
 
@@ -108,6 +108,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} 
-          asset_path: ./apps/unsaged/src-tauri/target/release/bundle/nsis/unsaged_0.1.0_x64-setup.exe
+          asset_path: ./apps/desktop/src-tauri/target/release/bundle/nsis/unsaged_0.1.0_x64-setup.exe
           asset_name: unsaged_0.1.0_x64-setup.exe
           asset_content_type: application/octet-stream
